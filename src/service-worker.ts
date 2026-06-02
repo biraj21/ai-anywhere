@@ -1,116 +1,123 @@
-import { ContextMenu, MessageAction, MESSAGE_RETRY_CONFIG, type ContextMenuValue, EXT_NAME } from "./constants";
+import {
+	ContextMenu,
+	MessageAction,
+	MESSAGE_RETRY_CONFIG,
+	type ContextMenuValue,
+	EXT_NAME,
+} from "./constants";
 import { logger } from "./logger";
 import type { SelectionInfo, SelectionInfoSavedMessage } from "./types";
 import { ExtStorage } from "./storage";
 
 const contextMenuTitleWithSelectedAi = async () => {
-  const selectedAI = await ExtStorage.local.getSelectedAI();
-  return selectedAI ? `${EXT_NAME} (${selectedAI})` : EXT_NAME;
+	const selectedAI = await ExtStorage.local.getSelectedAI();
+	return selectedAI ? `${EXT_NAME} (${selectedAI})` : EXT_NAME;
 };
 
 // Function to update context menu text
 const updateContextMenu = async () => {
-  chrome.contextMenus.update(ContextMenu.AskMyAi, {
-    title: await contextMenuTitleWithSelectedAi(),
-  });
+	chrome.contextMenus.update(ContextMenu.AiAnywhere, {
+		title: await contextMenuTitleWithSelectedAi(),
+	});
 };
 
 // Function to create context menus
 async function createContextMenus() {
-  await chrome.contextMenus.removeAll();
+	await chrome.contextMenus.removeAll();
 
-  chrome.contextMenus.create({
-    id: ContextMenu.AskMyAi,
-    title: await contextMenuTitleWithSelectedAi(),
-    contexts: ["selection"],
-  });
+	chrome.contextMenus.create({
+		id: ContextMenu.AiAnywhere,
+		title: await contextMenuTitleWithSelectedAi(),
+		contexts: ["selection"],
+	});
 
-  // Child menu items (submenus)
-  chrome.contextMenus.create({
-    id: ContextMenu.Explain,
-    parentId: ContextMenu.AskMyAi, // This creates the nesting
-    title: "Explain",
-    contexts: ["selection"],
-  });
+	// Child menu items (submenus)
+	chrome.contextMenus.create({
+		id: ContextMenu.Explain,
+		parentId: ContextMenu.AiAnywhere, // This creates the nesting
+		title: "Explain",
+		contexts: ["selection"],
+	});
 
-  chrome.contextMenus.create({
-    id: ContextMenu.Summarize,
-    parentId: ContextMenu.AskMyAi,
-    title: "Summarize",
-    contexts: ["selection"],
-  });
+	chrome.contextMenus.create({
+		id: ContextMenu.Summarize,
+		parentId: ContextMenu.AiAnywhere,
+		title: "Summarize",
+		contexts: ["selection"],
+	});
 
-  chrome.contextMenus.create({
-    id: ContextMenu.Simplify,
-    parentId: ContextMenu.AskMyAi,
-    title: "ELI5 (Simplify)",
-    contexts: ["selection"],
-  });
+	chrome.contextMenus.create({
+		id: ContextMenu.Simplify,
+		parentId: ContextMenu.AiAnywhere,
+		title: "ELI5 (Simplify)",
+		contexts: ["selection"],
+	});
 
-  // Add custom prompt templates
-  const templates = await ExtStorage.local.getPromptTemplates();
-  if (templates.length > 0) {
-    chrome.contextMenus.create({
-      id: "template-divider",
-      parentId: ContextMenu.AskMyAi,
-      type: "separator",
-      contexts: ["selection"],
-    });
+	// Add custom prompt templates
+	const templates = await ExtStorage.local.getPromptTemplates();
+	if (templates.length > 0) {
+		chrome.contextMenus.create({
+			id: "template-divider",
+			parentId: ContextMenu.AiAnywhere,
+			type: "separator",
+			contexts: ["selection"],
+		});
 
-    templates.forEach((template, index) => {
-      const templateId = `template-${index}`;
-      chrome.contextMenus.create({
-        id: templateId,
-        parentId: ContextMenu.AskMyAi,
-        title: template.length > 50 ? template.substring(0, 50) + "..." : template,
-        contexts: ["selection"],
-      });
-    });
-  }
+		templates.forEach((template, index) => {
+			const templateId = `template-${index}`;
+			chrome.contextMenus.create({
+				id: templateId,
+				parentId: ContextMenu.AiAnywhere,
+				title:
+					template.length > 50 ? template.substring(0, 50) + "..." : template,
+				contexts: ["selection"],
+			});
+		});
+	}
 }
 
 // Create context menu when extension is installed
 chrome.runtime.onInstalled.addListener(async (details) => {
-  await createContextMenus();
+	await createContextMenus();
 
-  const rule: chrome.declarativeNetRequest.Rule = {
-    id: 1,
-    priority: 1,
-    action: {
-      type: "modifyHeaders",
-      responseHeaders: [
-        { header: "frame-options", operation: "remove" },
-        { header: "x-frame-options", operation: "remove" },
-        { header: "content-security-policy", operation: "remove" },
+	const rule: chrome.declarativeNetRequest.Rule = {
+		id: 1,
+		priority: 1,
+		action: {
+			type: "modifyHeaders",
+			responseHeaders: [
+				{ header: "frame-options", operation: "remove" },
+				{ header: "x-frame-options", operation: "remove" },
+				{ header: "content-security-policy", operation: "remove" },
 
-        // [don't] Add CORS headers
-        // { header: "access-control-allow-origin", operation: "set", value: "*" },
-        // { header: "access-control-allow-methods", operation: "set", value: "*" },
-        // { header: "access-control-allow-headers", operation: "set", value: "*" },
-      ],
-    },
-    condition: {
-      urlFilter: "|*://*/*",
-      resourceTypes: ["main_frame", "sub_frame", "xmlhttprequest", "websocket"],
-    },
-  };
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1],
-    addRules: [rule],
-  });
+				// [don't] Add CORS headers
+				// { header: "access-control-allow-origin", operation: "set", value: "*" },
+				// { header: "access-control-allow-methods", operation: "set", value: "*" },
+				// { header: "access-control-allow-headers", operation: "set", value: "*" },
+			],
+		},
+		condition: {
+			urlFilter: "|*://*/*",
+			resourceTypes: ["main_frame", "sub_frame", "xmlhttprequest", "websocket"],
+		},
+	};
+	await chrome.declarativeNetRequest.updateDynamicRules({
+		removeRuleIds: [1],
+		addRules: [rule],
+	});
 
-  // Open popup on first install
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    try {
-      await chrome.action.openPopup();
-    } catch (error) {
-      // Fallback: If popup fails (e.g., no active window), open in new tab
-      logger.error("Failed to open popup, opening in new tab instead:", error);
-      await chrome.tabs.create({
-        url: chrome.runtime.getURL("popup.html"),
-      });
-    }
-  }
+	// Open popup on first install
+	if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
+		try {
+			await chrome.action.openPopup();
+		} catch (error) {
+			// Fallback: If popup fails (e.g., no active window), open in new tab
+			logger.error("Failed to open popup, opening in new tab instead:", error);
+			await chrome.tabs.create({
+				url: chrome.runtime.getURL("popup.html"),
+			});
+		}
+	}
 });
 
 // Update context menu on startup
@@ -118,237 +125,260 @@ chrome.runtime.onStartup.addListener(createContextMenus);
 
 // Listen for storage changes and update context menu
 chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === "local") {
-    if (changes.selectedAI) {
-      updateContextMenu();
-    }
-    if (changes.promptTemplates) {
-      createContextMenus();
-    }
-  }
+	if (namespace === "local") {
+		if (changes.selectedAI) {
+			updateContextMenu();
+		}
+		if (changes.promptTemplates) {
+			createContextMenus();
+		}
+	}
 });
 
 // Helper function to get selected text from active tab
 async function getSelectedText(tabId: number): Promise<string | null> {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: () => window.getSelection()?.toString() || null,
-    });
-    return results[0]?.result || null;
-  } catch (error) {
-    logger.error("Error getting selected text:", error);
-    return null;
-  }
+	try {
+		const results = await chrome.scripting.executeScript({
+			target: { tabId },
+			func: () => window.getSelection()?.toString() || null,
+		});
+		return results[0]?.result || null;
+	} catch (error) {
+		logger.error("Error getting selected text:", error);
+		return null;
+	}
 }
 
 // Handle messages from content scripts
 chrome.runtime.onMessage.addListener(async (message, sender, _sendResponse) => {
-  if (message.action === MessageAction.OPEN_SIDE_PANEL_WITH_TEXT) {
-    try {
-      const tab = sender.tab;
-      if (!tab || !tab.id) {
-        logger.error("No tab found in message sender");
-        return;
-      }
+	if (message.action === MessageAction.OPEN_SIDE_PANEL_WITH_TEXT) {
+		try {
+			const tab = sender.tab;
+			if (!tab || !tab.id) {
+				logger.error("No tab found in message sender");
+				return;
+			}
 
-      // Open side panel
-      if (tab.windowId && tab.windowId > 0) {
-        await chrome.sidePanel.open({ windowId: tab.windowId });
-      }
+			// Open side panel
+			if (tab.windowId && tab.windowId > 0) {
+				await chrome.sidePanel.open({ windowId: tab.windowId });
+			}
 
-      // Use formatType from message or default to AskMyAi
-      const formatType = message.formatType || ContextMenu.AskMyAi;
+			// Use formatType from message or default to AskMyAi
+			const formatType = message.formatType || ContextMenu.AiAnywhere;
 
-      // Send the selected text to the side panel
-      await sendTextToSidePanel(message.text, tab, formatType, message.customPrompt);
-    } catch (error) {
-      logger.error("Error handling OPEN_SIDE_PANEL_WITH_TEXT:", error);
-    }
-  }
+			// Send the selected text to the side panel
+			await sendTextToSidePanel(
+				message.text,
+				tab,
+				formatType,
+				message.customPrompt,
+			);
+		} catch (error) {
+			logger.error("Error handling OPEN_SIDE_PANEL_WITH_TEXT:", error);
+		}
+	}
 });
 
 // Handle keyboard shortcut commands
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command === "open-side-panel") {
-    try {
-      if (!tab || !tab.id) {
-        throw new Error("tab is undefined");
-      }
+	if (command === "open-side-panel") {
+		try {
+			if (!tab || !tab.id) {
+				throw new Error("tab is undefined");
+			}
 
-      // ALWAYS open the panel FIRST to preserve user gesture - do this before ANY other operation
-      // https://stackoverflow.com/questions/77213045/error-sidepanel-open-may-only-be-called-in-response-to-a-user-gesture-re
-      if (tab.windowId > 0) {
-        await chrome.sidePanel.open({ windowId: tab.windowId });
-      }
+			// ALWAYS open the panel FIRST to preserve user gesture - do this before ANY other operation
+			// https://stackoverflow.com/questions/77213045/error-sidepanel-open-may-only-be-called-in-response-to-a-user-gesture-re
+			if (tab.windowId > 0) {
+				await chrome.sidePanel.open({ windowId: tab.windowId });
+			}
 
-      // NOW check if panel was previously open
-      const wasPreviouslyOpen = await ExtStorage.session.getPanelOpenState();
+			// NOW check if panel was previously open
+			const wasPreviouslyOpen = await ExtStorage.session.getPanelOpenState();
 
-      // Check if there's selected text
-      const selectedText = await getSelectedText(tab.id);
+			// Check if there's selected text
+			const selectedText = await getSelectedText(tab.id);
 
-      if (wasPreviouslyOpen && !selectedText) {
-        // Panel was open and no text selected -> this is a toggle close
-        await chrome.runtime.sendMessage({
-          action: MessageAction.CLOSE_SIDE_PANEL,
-        });
-        await ExtStorage.session.setPanelOpenState(false);
-      } else {
-        // Keep panel open
-        await ExtStorage.session.setPanelOpenState(true);
+			if (wasPreviouslyOpen && !selectedText) {
+				// Panel was open and no text selected -> this is a toggle close
+				await chrome.runtime.sendMessage({
+					action: MessageAction.CLOSE_SIDE_PANEL,
+				});
+				await ExtStorage.session.setPanelOpenState(false);
+			} else {
+				// Keep panel open
+				await ExtStorage.session.setPanelOpenState(true);
 
-        // Send selected text if available
-        if (selectedText) {
-          await sendTextToSidePanel(selectedText, tab, ContextMenu.AskMyAi);
-        }
-      }
-    } catch (error) {
-      logger.error("Error handling side panel shortcut:", error);
-    }
-  }
+				// Send selected text if available
+				if (selectedText) {
+					await sendTextToSidePanel(selectedText, tab, ContextMenu.AiAnywhere);
+				}
+			}
+		} catch (error) {
+			logger.error("Error handling side panel shortcut:", error);
+		}
+	}
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async function (info, tab) {
-  const validMenuIds = Object.values(ContextMenu);
+	const validMenuIds = Object.values(ContextMenu);
 
-  if (typeof info.menuItemId !== "string") {
-    logger.error("menuItemId is not a string");
-    return;
-  }
+	if (typeof info.menuItemId !== "string") {
+		logger.error("menuItemId is not a string");
+		return;
+	}
 
-  try {
-    if (!tab) {
-      throw new Error("tab is undefined");
-    }
+	try {
+		if (!tab) {
+			throw new Error("tab is undefined");
+		}
 
-    // Open side panel
-    if (tab.windowId && tab.windowId > 0) {
-      await chrome.sidePanel.open({ windowId: tab.windowId });
-    }
+		// Open side panel
+		if (tab.windowId && tab.windowId > 0) {
+			await chrome.sidePanel.open({ windowId: tab.windowId });
+		}
 
-    if (!info.selectionText) {
-      logger.error("No selection text found.");
-      return;
-    }
+		if (!info.selectionText) {
+			logger.error("No selection text found.");
+			return;
+		}
 
-    // Check if it's a template menu item
-    if (info.menuItemId.startsWith("template-")) {
-      const templateIndex = parseInt(info.menuItemId.replace("template-", ""));
-      const templates = await ExtStorage.local.getPromptTemplates();
-      const template = templates[templateIndex];
+		// Check if it's a template menu item
+		if (info.menuItemId.startsWith("template-")) {
+			const templateIndex = parseInt(info.menuItemId.replace("template-", ""));
+			const templates = await ExtStorage.local.getPromptTemplates();
+			const template = templates[templateIndex];
 
-      if (template) {
-        await sendTextToSidePanel(info.selectionText, tab, ContextMenu.AskMyAi, template);
-      }
-    } else if (validMenuIds.includes(info.menuItemId as ContextMenuValue)) {
-      await sendTextToSidePanel(info.selectionText, tab, info.menuItemId as ContextMenuValue);
-    }
-  } catch (error) {
-    logger.error("Error handling context menu click:", error);
-  }
+			if (template) {
+				await sendTextToSidePanel(
+					info.selectionText,
+					tab,
+					ContextMenu.AiAnywhere,
+					template,
+				);
+			}
+		} else if (validMenuIds.includes(info.menuItemId as ContextMenuValue)) {
+			await sendTextToSidePanel(
+				info.selectionText,
+				tab,
+				info.menuItemId as ContextMenuValue,
+			);
+		}
+	} catch (error) {
+		logger.error("Error handling context menu click:", error);
+	}
 });
 
 async function sendTextToSidePanel(
-  text: string,
-  tab: chrome.tabs.Tab,
-  formatType: ContextMenuValue,
-  customPrompt?: string,
+	text: string,
+	tab: chrome.tabs.Tab,
+	formatType: ContextMenuValue,
+	customPrompt?: string,
 ) {
-  const selectionInfo: SelectionInfo = {
-    text: formatSelectionText(text, tab, formatType, customPrompt),
-    tabUrl: tab.url || "unknown",
-    tabTitle: tab.title || "Untitled",
-    timestamp: Date.now(),
-  };
+	const selectionInfo: SelectionInfo = {
+		text: formatSelectionText(text, tab, formatType, customPrompt),
+		tabUrl: tab.url || "unknown",
+		tabTitle: tab.title || "Untitled",
+		timestamp: Date.now(),
+	};
 
-  // save selection info in storage
-  await ExtStorage.session.setSelectionInfo(selectionInfo);
+	// save selection info in storage
+	await ExtStorage.session.setSelectionInfo(selectionInfo);
 
-  // send selection info to side panel with retry logic
-  let sent = false;
-  let i = 0;
-  for (; i < MESSAGE_RETRY_CONFIG.MAX_ATTEMPTS; ++i) {
-    try {
-      logger.debug(`Sending selection info to side panel (attempt ${i + 1})`);
-      const msg: SelectionInfoSavedMessage = {
-        action: MessageAction.SELECTION_INFO_SAVED,
-        selectionInfo,
-      };
-      await chrome.runtime.sendMessage(msg);
-      sent = true;
-      break;
-    } catch (error) {
-      logger.error("Error sending selection info to side panel:", error);
-      await new Promise((resolve) => setTimeout(resolve, MESSAGE_RETRY_CONFIG.RETRY_DELAY_MS));
-    }
-  }
+	// send selection info to side panel with retry logic
+	let sent = false;
+	let i = 0;
+	for (; i < MESSAGE_RETRY_CONFIG.MAX_ATTEMPTS; ++i) {
+		try {
+			logger.debug(`Sending selection info to side panel (attempt ${i + 1})`);
+			const msg: SelectionInfoSavedMessage = {
+				action: MessageAction.SELECTION_INFO_SAVED,
+				selectionInfo,
+			};
+			await chrome.runtime.sendMessage(msg);
+			sent = true;
+			break;
+		} catch (error) {
+			logger.error("Error sending selection info to side panel:", error);
+			await new Promise((resolve) =>
+				setTimeout(resolve, MESSAGE_RETRY_CONFIG.RETRY_DELAY_MS),
+			);
+		}
+	}
 
-  if (!sent) {
-    logger.error(`Failed to send selection info to side panel after ${i} attempts`);
-  }
+	if (!sent) {
+		logger.error(
+			`Failed to send selection info to side panel after ${i} attempts`,
+		);
+	}
 }
 
-function formatSelectionText(text: string, tab: chrome.tabs.Tab, menuItemId: ContextMenuValue, customPrompt?: string) {
-  const baseContext = `Yo I'm reading this page titled '${tab.title}' at ${tab.url}.`;
+function formatSelectionText(
+	text: string,
+	tab: chrome.tabs.Tab,
+	menuItemId: ContextMenuValue,
+	customPrompt?: string,
+) {
+	const baseContext = `Yo I'm reading this page titled '${tab.title}' at ${tab.url}.`;
 
-  // If custom prompt is provided, use it & return early
-  if (customPrompt) {
-    return `${baseContext}
+	// If custom prompt is provided, use it & return early
+	if (customPrompt) {
+		return `${baseContext}
   
 ${customPrompt}:
   
 <snippet>
 ${text}
 </snippet>`;
-  }
+	}
 
-  let formatted = "";
+	let formatted = "";
 
-  // Otherwise use predefined formats
-  switch (menuItemId) {
-    case ContextMenu.Explain:
-      formatted = `${baseContext}
+	// Otherwise use predefined formats
+	switch (menuItemId) {
+		case ContextMenu.Explain:
+			formatted = `${baseContext}
 
 Explain this snippet from it:
 
 <snippet>
 ${text}
 </snippet>`;
-      break;
+			break;
 
-    case ContextMenu.Summarize:
-      formatted = `${baseContext}
+		case ContextMenu.Summarize:
+			formatted = `${baseContext}
 
 Summarize the key points from this text. Use formatting (headers, bullets, etc.) to make it easy to scan. Be concise but don't lose important details.
 
 <snippet>
 ${text}
 </snippet>`;
-      break;
+			break;
 
-    case ContextMenu.Simplify:
-      formatted = `${baseContext}
+		case ContextMenu.Simplify:
+			formatted = `${baseContext}
 
 Explain this like I'm 5 (ELI5) - use simple language and everyday examples:
 
 <snippet>
 ${text}
 </snippet>`;
-      break;
+			break;
 
-    default:
-      // Default case for parent menu or unknown
-      formatted = `${baseContext}
+		default:
+			// Default case for parent menu or unknown
+			formatted = `${baseContext}
       
 Read the page and help me understand this snippet:
 
 <snippet>
 ${text}
 </snippet>`;
-      break;
-  }
+			break;
+	}
 
-  return formatted;
+	return formatted;
 }

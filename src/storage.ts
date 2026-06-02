@@ -46,18 +46,18 @@ export const ExtStorage = {
 
     /**
      * Global toggle for the floating selection button.
-     * Defaults to true when not explicitly set.
+     * Defaults to false when not explicitly set.
      */
     getSelectionButtonEnabled: async (): Promise<boolean> => {
-      const { selectionButtonEnabled } = await chrome.storage.local.get("selectionButtonEnabled");
-      if (typeof selectionButtonEnabled === "boolean") {
-        return selectionButtonEnabled;
+      const { floatingSelectionButtonEnabled } = await chrome.storage.local.get("floatingSelectionButtonEnabled");
+      if (typeof floatingSelectionButtonEnabled === "boolean") {
+        return floatingSelectionButtonEnabled;
       }
-      return true;
+      return false;
     },
 
     setSelectionButtonEnabled: (enabled: boolean) => {
-      return chrome.storage.local.set({ selectionButtonEnabled: enabled });
+      return chrome.storage.local.set({ floatingSelectionButtonEnabled: enabled });
     },
 
     getPromptTemplates: async (): Promise<string[]> => {

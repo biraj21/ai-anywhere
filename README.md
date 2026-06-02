@@ -26,7 +26,7 @@ Perfect for quickly understanding complex concepts, code snippets, technical ter
 
 ### Option 1: From Chrome Web Store
 
-[Add to Chrome](https://chromewebstore.google.com/detail/ask-my-ai/clfbemdacihopdopaanknckjkgbpando) from Chrome Web Store.
+[Add to Chrome](https://chromewebstore.google.com/detail/ai-anywhere-multi-ai-side/clfbemdacihopdopaanknckjkgbpando) from Chrome Web Store.
 
 ### Option 2: Load as Unpacked Extension (Developer Mode)
 

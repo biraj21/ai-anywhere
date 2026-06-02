@@ -6,137 +6,137 @@ const ICON_BASE_PATH = "public/brands";
  * All the AI websites that this extension supports.
  */
 export const AI_WEBSITES: Record<AiType, AiConfig> = {
-  chatgpt: {
-    label: "ChatGPT",
-    url: "https://chatgpt.com/",
-    icon: `${ICON_BASE_PATH}/openai.svg`,
-  },
-  claude: {
-    label: "Claude",
-    url: "https://claude.ai/new",
-    icon: `${ICON_BASE_PATH}/claude-color.svg`,
-  },
-  gemini: {
-    label: "Gemini",
-    url: "https://gemini.google.com/",
-    icon: `${ICON_BASE_PATH}/gemini-color.svg`,
-  },
-  perplexity: {
-    label: "Perplexity",
-    url: "https://perplexity.ai/",
-    icon: `${ICON_BASE_PATH}/perplexity-color.svg`,
-  },
-  scira: {
-    label: "Scira",
-    url: "https://scira.ai/",
-    icon: `${ICON_BASE_PATH}/scira.svg`,
-  },
-  deepseek: {
-    label: "Deepseek",
-    url: "https://chat.deepseek.com/",
-    icon: `${ICON_BASE_PATH}/deepseek-color.svg`,
-  },
-  aistudio: {
-    label: "Google AI Studio",
-    url: "https://aistudio.google.com/",
-    icon: `${ICON_BASE_PATH}/aistudio.svg`,
-  },
-  google: {
-    label: "Google",
-    url: "https://google.com/",
-    icon: `${ICON_BASE_PATH}/google-color.svg`,
-  },
-  qwen: {
-    label: "Qwen",
-    url: "https://chat.qwen.ai/",
-    icon: `${ICON_BASE_PATH}/qwen-color.svg`,
-  },
-  kimi: {
-    label: "Kimi",
-    url: "https://www.kimi.com/",
-    icon: `${ICON_BASE_PATH}/kimi-color.svg`,
-  },
+	chatgpt: {
+		label: "ChatGPT",
+		url: "https://chatgpt.com/",
+		icon: `${ICON_BASE_PATH}/openai.svg`,
+	},
+	claude: {
+		label: "Claude",
+		url: "https://claude.ai/new",
+		icon: `${ICON_BASE_PATH}/claude-color.svg`,
+	},
+	gemini: {
+		label: "Gemini",
+		url: "https://gemini.google.com/",
+		icon: `${ICON_BASE_PATH}/gemini-color.svg`,
+	},
+	perplexity: {
+		label: "Perplexity",
+		url: "https://perplexity.ai/",
+		icon: `${ICON_BASE_PATH}/perplexity-color.svg`,
+	},
+	scira: {
+		label: "Scira",
+		url: "https://scira.ai/",
+		icon: `${ICON_BASE_PATH}/scira.svg`,
+	},
+	deepseek: {
+		label: "Deepseek",
+		url: "https://chat.deepseek.com/",
+		icon: `${ICON_BASE_PATH}/deepseek-color.svg`,
+	},
+	aistudio: {
+		label: "Google AI Studio",
+		url: "https://aistudio.google.com/",
+		icon: `${ICON_BASE_PATH}/aistudio.svg`,
+	},
+	google: {
+		label: "Google",
+		url: "https://google.com/",
+		icon: `${ICON_BASE_PATH}/google-color.svg`,
+	},
+	qwen: {
+		label: "Qwen",
+		url: "https://chat.qwen.ai/",
+		icon: `${ICON_BASE_PATH}/qwen-color.svg`,
+	},
+	kimi: {
+		label: "Kimi",
+		url: "https://www.kimi.com/",
+		icon: `${ICON_BASE_PATH}/kimi-color.svg`,
+	},
 
-  grok: {
-    label: "Grok",
-    url: "https://grok.com/",
-    icon: `${ICON_BASE_PATH}/grok.svg`,
-  },
-  mistral: {
-    label: "Mistral Le Chat",
-    url: "https://chat.mistral.ai/chat",
-    icon: `${ICON_BASE_PATH}/mistral-color.svg`,
-  },
+	grok: {
+		label: "Grok",
+		url: "https://grok.com/",
+		icon: `${ICON_BASE_PATH}/grok.svg`,
+	},
+	mistral: {
+		label: "Mistral Le Chat",
+		url: "https://chat.mistral.ai/chat",
+		icon: `${ICON_BASE_PATH}/mistral-color.svg`,
+	},
 };
 
 export const ContextMenu = {
-  AskMyAi: "ask-my-ai",
-  Explain: "explain",
-  Summarize: "summarize",
-  Simplify: "simplify",
+	AiAnywhere: "ai-anywhere",
+	Explain: "explain",
+	Summarize: "summarize",
+	Simplify: "simplify",
 } as const;
 
 export type ContextMenuValue = (typeof ContextMenu)[keyof typeof ContextMenu];
 
 export const MessageAction = {
-  /**
-   * Iframe content script must send this to the side panel to initiate handshake.
-   */
-  EXT_IFRAME_HANDSHAKE_INIT: "EXT_IFRAME_HANDSHAKE_INIT",
+	/**
+	 * Iframe content script must send this to the side panel to initiate handshake.
+	 */
+	EXT_IFRAME_HANDSHAKE_INIT: "EXT_IFRAME_HANDSHAKE_INIT",
 
-  /**
-   * Side panel must send this to the iframe content script to respond to handshake.
-   */
-  EXT_IFRAME_HANDSHAKE_RESP: "EXT_IFRAME_HANDSHAKE_RESP",
+	/**
+	 * Side panel must send this to the iframe content script to respond to handshake.
+	 */
+	EXT_IFRAME_HANDSHAKE_RESP: "EXT_IFRAME_HANDSHAKE_RESP",
 
-  /**
-   * Service worker must save selection info to storage and send this to the side panel to forward
-   * it to the iframe content script.
-   */
-  SELECTION_INFO_SAVED: "SELECTION_INFO_SAVED",
+	/**
+	 * Service worker must save selection info to storage and send this to the side panel to forward
+	 * it to the iframe content script.
+	 */
+	SELECTION_INFO_SAVED: "SELECTION_INFO_SAVED",
 
-  /**
-   * Service worker must send this to the side panel to trigger selection info request.
-   */
-  SELECTION_INFO_REQ: "SELECTION_INFO_REQ",
+	/**
+	 * Service worker must send this to the side panel to trigger selection info request.
+	 */
+	SELECTION_INFO_REQ: "SELECTION_INFO_REQ",
 
-  /**
-   * Side panel must send this to the iframe content script to respond to selection info request.
-   */
-  SELECTION_INFO_RESP: "SELECTION_INFO_RESP",
+	/**
+	 * Side panel must send this to the iframe content script to respond to selection info request.
+	 */
+	SELECTION_INFO_RESP: "SELECTION_INFO_RESP",
 
-  /**
-   * Side panel sends this to iframe content script to request opening current URL in new tab.
-   */
-  OPEN_CURRENT_URL_IN_TAB: "OPEN_CURRENT_URL_IN_TAB",
+	/**
+	 * Side panel sends this to iframe content script to request opening current URL in new tab.
+	 */
+	OPEN_CURRENT_URL_IN_TAB: "OPEN_CURRENT_URL_IN_TAB",
 
-  /**
-   * Side panel sends this to iframe content script to reload the page.
-   */
-  RELOAD_IFRAME: "RELOAD_IFRAME",
+	/**
+	 * Side panel sends this to iframe content script to reload the page.
+	 */
+	RELOAD_IFRAME: "RELOAD_IFRAME",
 
-  /**
-   * Service worker sends this to side panel to request closing itself.
-   */
-  CLOSE_SIDE_PANEL: "CLOSE_SIDE_PANEL",
+	/**
+	 * Service worker sends this to side panel to request closing itself.
+	 */
+	CLOSE_SIDE_PANEL: "CLOSE_SIDE_PANEL",
 
-  /**
-   * Selection popup content script sends this to service worker to open side panel with selected text.
-   */
-  OPEN_SIDE_PANEL_WITH_TEXT: "OPEN_SIDE_PANEL_WITH_TEXT",
+	/**
+	 * Selection popup content script sends this to service worker to open side panel with selected text.
+	 */
+	OPEN_SIDE_PANEL_WITH_TEXT: "OPEN_SIDE_PANEL_WITH_TEXT",
 
-  /**
-   * Service worker sends this to content script to show a toast notification.
-   */
-  SHOW_TOAST: "SHOW_TOAST",
+	/**
+	 * Service worker sends this to content script to show a toast notification.
+	 */
+	SHOW_TOAST: "SHOW_TOAST",
 } as const;
 
 export const EXT_NAME = "AI Anywhere";
 
 // Retry configuration for sending messages to side panel
 export const MESSAGE_RETRY_CONFIG = {
-  MAX_ATTEMPTS: 5,
-  RETRY_DELAY_MS: 50,
+	MAX_ATTEMPTS: 5,
+	RETRY_DELAY_MS: 50,
 } as const;
 
 // Time window (ms) to auto-inject into new inputs after first injection
@@ -144,20 +144,20 @@ export const MESSAGE_RETRY_CONFIG = {
 export const INJECTION_WINDOW_MS = 500;
 
 export const SESSION_STORAGE_KEYS = {
-  IN_SIDE_PANEL: "in-side-panel",
+	IN_SIDE_PANEL: "in-side-panel",
 } as const;
 
 export const COMMAND_SHORTCUTS = {
-  OPEN_SIDE_PANEL: "open-side-panel",
+	OPEN_SIDE_PANEL: "open-side-panel",
 } as const;
 
 export const COMMAND_SHORTCUTS_MAP = {
-  [COMMAND_SHORTCUTS.OPEN_SIDE_PANEL]: "⌘/Ctrl + Shift + E",
+	[COMMAND_SHORTCUTS.OPEN_SIDE_PANEL]: "⌘/Ctrl + Shift + E",
 } as const;
 
 const HANGING_PIECE_BASE_URL = "https://www.hangingpiece.com/";
 
 export const PROMO_LINKS = {
-  hangingPiecePopup: `${HANGING_PIECE_BASE_URL}?utm_source=ask_my_ai_extension&utm_medium=chrome_extension&utm_campaign=extension_cross_promo&utm_content=popup`,
-  hangingPieceSidebar: `${HANGING_PIECE_BASE_URL}?utm_source=ask_my_ai_extension&utm_medium=chrome_extension&utm_campaign=extension_cross_promo&utm_content=side_panel`,
+	hangingPiecePopup: `${HANGING_PIECE_BASE_URL}?utm_source=ask_my_ai_extension&utm_medium=chrome_extension&utm_campaign=extension_cross_promo&utm_content=popup`,
+	hangingPieceSidebar: `${HANGING_PIECE_BASE_URL}?utm_source=ask_my_ai_extension&utm_medium=chrome_extension&utm_campaign=extension_cross_promo&utm_content=side_panel`,
 } as const;
