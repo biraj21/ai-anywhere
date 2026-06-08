@@ -280,9 +280,7 @@
         max-width: 260px;
         padding: 14px;
         border-radius: 14px;
-        background:
-          radial-gradient(circle at top right, rgba(255, 230, 109, 0.95), rgba(255, 230, 109, 0) 38%),
-          linear-gradient(145deg, #243b53 0%, #1b2a41 100%);
+        background: linear-gradient(145deg, #243b53 0%, #1b2a41 100%);
         color: #f7f4e9;
         border: 1px solid rgba(36, 59, 83);
         box-shadow: 0 10px 24px rgba(27, 42, 65, 0.18);
@@ -309,10 +307,6 @@
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: -0.3px;
-      }
-
-      .left-panel__promo-title-icon {
-        margin-right: 6px;
       }
 
       .left-panel__promo-text {
@@ -693,7 +687,7 @@
             <span>+</span>
             <kbd data-key="2">E</kbd>
           </div>
-          <button id="open-sidebar" class="left-panel__open-btn">or click here to open it</button>
+          <button id="open-sidebar" class="left-panel__open-btn" type="button">or click here to open it</button>
         </div>
 
         <div class="left-panel__shortcut-warning" id="shortcut-warning" style="display: none">
@@ -702,7 +696,7 @@
           <p class="left-panel__warning-description">
             <strong><kbd id="warning-shortcut">Ctrl</kbd> + Shift + E</strong> taken by another extension.
           </p>
-          <button id="open-shortcuts-page" class="left-panel__warning-btn">Set Shortcut</button>
+          <button type="button" id="open-shortcuts-page" class="left-panel__warning-btn">Set Shortcut</button>
         </div>
 
         <div class="left-panel__privacy-notice">
@@ -724,13 +718,18 @@
           </div>
 
           <div class="left-panel__promo-card">
-            <span class="left-panel__promo-pill">New side quest</span>
-            <p class="left-panel__promo-title"><span class="left-panel__promo-title-icon">♞</span>Hanging Piece</p>
+            <p class="left-panel__promo-title">Shellular</p>
             <p class="left-panel__promo-text">
-              AI chess coach that explains your blunders in plain english &amp;
-              <span style="font-weight: 600">how to improve</span>.
+              Run <strong>Claude Code, Codex</strong> & other AI agents, plus terminals, code editor, Git &amp; DevTools
+              <strong>from your phone</strong>.
             </p>
-            <a id="hanging-piece-popup-link" href="#" target="_blank" rel="noreferrer" class="left-panel__promo-link">
+            <a
+              id="promo-link"
+              href="https://shellular.dev"
+              target="_blank"
+              rel="noreferrer"
+              class="left-panel__promo-link"
+            >
               Try it
             </a>
           </div>
@@ -772,7 +771,7 @@
               <p class="setting-group-label">Custom prompts</p>
               <div class="prompt-input-group">
                 <input type="text" id="new-prompt-input" class="prompt-input" placeholder="Add a custom prompt..." />
-                <button id="add-prompt-btn" class="prompt-add-btn">Add</button>
+                <button type="button" id="add-prompt-btn" class="prompt-add-btn">Add</button>
               </div>
               <div id="prompt-list" class="prompt-list"></div>
             </div>

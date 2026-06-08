@@ -1,272 +1,284 @@
 import { AI_WEBSITES, MessageAction, PROMO_LINKS } from "./constants";
 import { logger } from "./logger";
 import type {
-  AiType,
-  ExtIframeHandshakeRespMessage,
-  OpenCurrentUrlInTabMessage,
-  ReloadIframeMessage,
-  SelectionInfoRespMessage,
-  SidePanelToIframeMessage,
+	AiType,
+	ExtIframeHandshakeRespMessage,
+	OpenCurrentUrlInTabMessage,
+	ReloadIframeMessage,
+	SelectionInfoRespMessage,
+	SidePanelToIframeMessage,
 } from "./types";
 import { ExtStorage } from "./storage";
 
 let iframe: HTMLIFrameElement | null = null;
 
 const sendMessageToContent = (msg: SidePanelToIframeMessage) => {
-  if (!iframe) {
-    logger.warn("sendMessageToContent(): iframe is undefined");
-    return;
-  }
+	if (!iframe) {
+		logger.warn("sendMessageToContent(): iframe is undefined");
+		return;
+	}
 
-  if (!iframe.contentWindow) {
-    logger.warn("sendMessageToContent():iframe.contentWindow is undefined");
-    return;
-  }
+	if (!iframe.contentWindow) {
+		logger.warn("sendMessageToContent():iframe.contentWindow is undefined");
+		return;
+	}
 
-  iframe.contentWindow.postMessage(msg, "*");
+	iframe.contentWindow.postMessage(msg, "*");
 };
 
 window.onmessage = async (e) => {
-  if (e.data.action === MessageAction.EXT_IFRAME_HANDSHAKE_INIT) {
-    if (e.data.extId === chrome.runtime.id) {
-      const msg: ExtIframeHandshakeRespMessage = {
-        action: MessageAction.EXT_IFRAME_HANDSHAKE_RESP,
-        extId: chrome.runtime.id,
-      };
-      sendMessageToContent(msg);
-    } else {
-      logger.error("Unexpected message from iframe: " + JSON.stringify(e.data));
-    }
-  } else if (e.data.action === MessageAction.SELECTION_INFO_REQ) {
-    const selectionInfo = await ExtStorage.session.getSelectionInfo();
-    if (selectionInfo) {
-      const msg: SelectionInfoRespMessage = {
-        action: MessageAction.SELECTION_INFO_RESP,
-        selectionInfo,
-      };
-      sendMessageToContent(msg);
-    }
-  }
+	if (e.data.action === MessageAction.EXT_IFRAME_HANDSHAKE_INIT) {
+		if (e.data.extId === chrome.runtime.id) {
+			const msg: ExtIframeHandshakeRespMessage = {
+				action: MessageAction.EXT_IFRAME_HANDSHAKE_RESP,
+				extId: chrome.runtime.id,
+			};
+			sendMessageToContent(msg);
+		} else {
+			logger.error("Unexpected message from iframe: " + JSON.stringify(e.data));
+		}
+	} else if (e.data.action === MessageAction.SELECTION_INFO_REQ) {
+		const selectionInfo = await ExtStorage.session.getSelectionInfo();
+		if (selectionInfo) {
+			const msg: SelectionInfoRespMessage = {
+				action: MessageAction.SELECTION_INFO_RESP,
+				selectionInfo,
+			};
+			sendMessageToContent(msg);
+		}
+	}
 };
 
 chrome.runtime.onMessage.addListener(async (message) => {
-  if (message.action === MessageAction.SELECTION_INFO_SAVED) {
-    const msg: SelectionInfoRespMessage = {
-      action: MessageAction.SELECTION_INFO_RESP,
-      selectionInfo: message.selectionInfo,
-    };
+	if (message.action === MessageAction.SELECTION_INFO_SAVED) {
+		const msg: SelectionInfoRespMessage = {
+			action: MessageAction.SELECTION_INFO_RESP,
+			selectionInfo: message.selectionInfo,
+		};
 
-    sendMessageToContent(msg);
-  } else if (message.action === MessageAction.CLOSE_SIDE_PANEL) {
-    // Update state before closing
-    try {
-      await ExtStorage.session.setPanelOpenState(false);
-    } catch (error) {
-      logger.error("Error updating panel state on close:", error);
-    }
-    // Close the side panel
-    window.close();
-  }
+		sendMessageToContent(msg);
+	} else if (message.action === MessageAction.CLOSE_SIDE_PANEL) {
+		// Update state before closing
+		try {
+			await ExtStorage.session.setPanelOpenState(false);
+		} catch (error) {
+			logger.error("Error updating panel state on close:", error);
+		}
+		// Close the side panel
+		window.close();
+	}
 });
 
 // Load saved preferences
 document.addEventListener("DOMContentLoaded", async () => {
-  // Mark panel as open in storage
-  try {
-    await ExtStorage.session.setPanelOpenState(true);
-  } catch (error) {
-    logger.error("Error setting panel open state:", error);
-  }
+	// Mark panel as open in storage
+	try {
+		await ExtStorage.session.setPanelOpenState(true);
+	} catch (error) {
+		logger.error("Error setting panel open state:", error);
+	}
 
-  // Get containers
-  const aiIconsContainer = document.getElementById("ai-icons-container");
-  const utilityButtonsContainer = document.getElementById("utility-buttons-container");
+	// Get containers
+	const aiIconsContainer = document.getElementById("ai-icons-container");
+	const utilityButtonsContainer = document.getElementById(
+		"utility-buttons-container",
+	);
 
-  if (!aiIconsContainer || !utilityButtonsContainer) {
-    logger.error("Sidebar container elements not found!");
-    return;
-  }
+	if (!aiIconsContainer || !utilityButtonsContainer) {
+		logger.error("Sidebar container elements not found!");
+		return;
+	}
 
-  // Determine which AIs should be shown (enabled list in settings)
-  let enabledAIs = await ExtStorage.local.getEnabledAIs();
-  if (!enabledAIs || enabledAIs.length === 0) {
-    enabledAIs = Object.keys(AI_WEBSITES) as AiType[];
-  }
+	// Determine which AIs should be shown (enabled list in settings)
+	let enabledAIs = await ExtStorage.local.getEnabledAIs();
+	if (!enabledAIs || enabledAIs.length === 0) {
+		enabledAIs = Object.keys(AI_WEBSITES) as AiType[];
+	}
 
-  // Create icons for each enabled AI
-  for (const [key, value] of Object.entries(AI_WEBSITES)) {
-    if (!enabledAIs.includes(key as AiType)) {
-      continue;
-    }
+	// Create icons for each enabled AI
+	for (const [key, value] of Object.entries(AI_WEBSITES)) {
+		if (!enabledAIs.includes(key as AiType)) {
+			continue;
+		}
 
-    const iconContainer = document.createElement("div");
-    iconContainer.className = "ai-icon";
-    iconContainer.dataset.aiType = key;
-    iconContainer.title = value.label;
+		const iconContainer = document.createElement("div");
+		iconContainer.className = "ai-icon";
+		iconContainer.dataset.aiType = key;
+		iconContainer.title = value.label;
 
-    // Load SVG content
-    try {
-      const iconUrl = chrome.runtime.getURL(value.icon);
-      const response = await fetch(iconUrl);
-      const svgContent = await response.text();
-      iconContainer.innerHTML = svgContent;
-    } catch (error) {
-      logger.error(`Failed to load icon for ${key}:`, error);
-      // Fallback to text
-      iconContainer.innerHTML = `<div style="color: white; font-size: 10px; text-align: center;">${value.label.substring(
-        0,
-        3,
-      )}</div>`;
-    }
+		// Load SVG content
+		try {
+			const iconUrl = chrome.runtime.getURL(value.icon);
+			const response = await fetch(iconUrl);
+			const svgContent = await response.text();
+			iconContainer.innerHTML = svgContent;
+		} catch (error) {
+			logger.error(`Failed to load icon for ${key}:`, error);
+			// Fallback to text
+			iconContainer.innerHTML = `<div style="color: white; font-size: 10px; text-align: center;">${value.label.substring(
+				0,
+				3,
+			)}</div>`;
+		}
 
-    iconContainer.addEventListener("click", async () => {
-      try {
-        // Remove active class from all icons
-        aiIconsContainer.querySelectorAll(".ai-icon").forEach((icon) => icon.classList.remove("active"));
-        // Add active class to clicked icon
-        iconContainer.classList.add("active");
+		iconContainer.addEventListener("click", async () => {
+			try {
+				// Remove active class from all icons
+				aiIconsContainer
+					.querySelectorAll(".ai-icon")
+					.forEach((icon) => icon.classList.remove("active"));
+				// Add active class to clicked icon
+				iconContainer.classList.add("active");
 
-        await loadAIInIframe(key as AiType);
-      } catch (error) {
-        logger.error("icon click event listener error:", error);
-      }
-    });
+				await loadAIInIframe(key as AiType);
+			} catch (error) {
+				logger.error("icon click event listener error:", error);
+			}
+		});
 
-    aiIconsContainer.appendChild(iconContainer);
-  }
+		aiIconsContainer.appendChild(iconContainer);
+	}
 
-  const hangingPieceButton = document.createElement("div");
-  hangingPieceButton.className = "open-tab-btn promo-button";
-  hangingPieceButton.title = "Try Hanging Piece";
-  hangingPieceButton.setAttribute("aria-label", "Try Hanging Piece");
-  hangingPieceButton.innerHTML = '<span aria-hidden="true">♞</span><span class="promo-badge">NEW</span>';
+	const promoButton = document.createElement("div");
+	promoButton.className = "open-tab-btn promo-button";
+	promoButton.title = "Try Shellular";
+	promoButton.setAttribute("aria-label", "Try Shellular");
+	promoButton.innerHTML =
+		'<span aria-hidden="true">📱</span><span class="promo-badge">NEW</span>';
 
-  hangingPieceButton.addEventListener("click", async () => {
-    await chrome.tabs.create({ url: PROMO_LINKS.hangingPieceSidebar });
-  });
+	promoButton.addEventListener("click", async () => {
+		await chrome.tabs.create({ url: PROMO_LINKS.promoSidebar });
+	});
 
-  utilityButtonsContainer.appendChild(hangingPieceButton);
+	utilityButtonsContainer.appendChild(promoButton);
 
-  // Create "Refresh" button
-  const refreshButton = document.createElement("div");
-  refreshButton.className = "open-tab-btn";
-  refreshButton.title = "Refresh this";
-  refreshButton.innerHTML = "↻";
+	// Create "Refresh" button
+	const refreshButton = document.createElement("div");
+	refreshButton.className = "open-tab-btn";
+	refreshButton.title = "Refresh this";
+	refreshButton.innerHTML = "↻";
 
-  refreshButton.addEventListener("click", () => {
-    const msg: ReloadIframeMessage = {
-      action: MessageAction.RELOAD_IFRAME,
-    };
-    sendMessageToContent(msg);
-  });
+	refreshButton.addEventListener("click", () => {
+		const msg: ReloadIframeMessage = {
+			action: MessageAction.RELOAD_IFRAME,
+		};
+		sendMessageToContent(msg);
+	});
 
-  utilityButtonsContainer.appendChild(refreshButton);
+	utilityButtonsContainer.appendChild(refreshButton);
 
-  // Create "Open in New Tab" button
-  const openTabButton = document.createElement("div");
-  openTabButton.className = "open-tab-btn";
-  openTabButton.title = "Open this in new tab";
-  openTabButton.innerHTML = "↗";
+	// Create "Open in New Tab" button
+	const openTabButton = document.createElement("div");
+	openTabButton.className = "open-tab-btn";
+	openTabButton.title = "Open this in new tab";
+	openTabButton.innerHTML = "↗";
 
-  openTabButton.addEventListener("click", () => {
-    const msg: OpenCurrentUrlInTabMessage = {
-      action: MessageAction.OPEN_CURRENT_URL_IN_TAB,
-    };
-    sendMessageToContent(msg);
-  });
+	openTabButton.addEventListener("click", () => {
+		const msg: OpenCurrentUrlInTabMessage = {
+			action: MessageAction.OPEN_CURRENT_URL_IN_TAB,
+		};
+		sendMessageToContent(msg);
+	});
 
-  utilityButtonsContainer.appendChild(openTabButton);
+	utilityButtonsContainer.appendChild(openTabButton);
 
-  // Create "Close" button
-  const closeButton = document.createElement("div");
-  closeButton.className = "open-tab-btn";
-  closeButton.title = "Close side panel";
-  closeButton.innerHTML = "✕";
+	// Create "Close" button
+	const closeButton = document.createElement("div");
+	closeButton.className = "open-tab-btn";
+	closeButton.title = "Close side panel";
+	closeButton.innerHTML = "✕";
 
-  closeButton.addEventListener("click", async () => {
-    try {
-      await ExtStorage.session.setPanelOpenState(false);
-    } catch (error) {
-      logger.error("Error updating panel state on close:", error);
-    }
-    window.close();
-  });
+	closeButton.addEventListener("click", async () => {
+		try {
+			await ExtStorage.session.setPanelOpenState(false);
+		} catch (error) {
+			logger.error("Error updating panel state on close:", error);
+		}
+		window.close();
+	});
 
-  utilityButtonsContainer.appendChild(closeButton);
+	utilityButtonsContainer.appendChild(closeButton);
 
-  // Set initial active AI, preferring user's last choice within enabled AIs
-  let selectedAI = await ExtStorage.local.getSelectedAI();
-  if (!selectedAI || !enabledAIs.includes(selectedAI) || !(selectedAI in AI_WEBSITES)) {
-    selectedAI = enabledAIs[0] as AiType;
-  }
+	// Set initial active AI, preferring user's last choice within enabled AIs
+	let selectedAI = await ExtStorage.local.getSelectedAI();
+	if (
+		!selectedAI ||
+		!enabledAIs.includes(selectedAI) ||
+		!(selectedAI in AI_WEBSITES)
+	) {
+		selectedAI = enabledAIs[0] as AiType;
+	}
 
-  // Mark the selected AI as active
-  const activeIcon = aiIconsContainer.querySelector(`[data-ai-type="${selectedAI}"]`);
-  if (activeIcon) {
-    activeIcon.classList.add("active");
-  }
+	// Mark the selected AI as active
+	const activeIcon = aiIconsContainer.querySelector(
+		`[data-ai-type="${selectedAI}"]`,
+	);
+	if (activeIcon) {
+		activeIcon.classList.add("active");
+	}
 
-  loadAIInIframe(selectedAI);
+	loadAIInIframe(selectedAI);
 });
 
 // Track when panel is closed
 window.addEventListener("beforeunload", async () => {
-  try {
-    await ExtStorage.session.setPanelOpenState(false);
-  } catch (error) {
-    logger.error("Error setting panel closed state:", error);
-  }
+	try {
+		await ExtStorage.session.setPanelOpenState(false);
+	} catch (error) {
+		logger.error("Error setting panel closed state:", error);
+	}
 });
 
 async function loadAIInIframe(aiType: AiType) {
-  const currentAiConfig = AI_WEBSITES[aiType];
+	const currentAiConfig = AI_WEBSITES[aiType];
 
-  // save currently selected AI in storage as previous AI
-  const prevSelectedAi = await ExtStorage.local.getSelectedAI();
-  if (prevSelectedAi) {
-    await ExtStorage.local.setPrevSelectedAI(prevSelectedAi);
-  }
+	// save currently selected AI in storage as previous AI
+	const prevSelectedAi = await ExtStorage.local.getSelectedAI();
+	if (prevSelectedAi) {
+		await ExtStorage.local.setPrevSelectedAI(prevSelectedAi);
+	}
 
-  // save currently selected AI in storage
-  await ExtStorage.local.setSelectedAI(aiType);
+	// save currently selected AI in storage
+	await ExtStorage.local.setSelectedAI(aiType);
 
-  // Show the AI container with loading message
-  const container = document.getElementById("ai-container");
-  if (!container) {
-    logger.error("AI container element not found!");
-    return;
-  }
+	// Show the AI container with loading message
+	const container = document.getElementById("ai-container");
+	if (!container) {
+		logger.error("AI container element not found!");
+		return;
+	}
 
-  const oldIframe = document.getElementById("ai-iframe");
-  if (oldIframe) {
-    oldIframe.remove();
-  }
+	const oldIframe = document.getElementById("ai-iframe");
+	if (oldIframe) {
+		oldIframe.remove();
+	}
 
-  const newIframe = document.createElement("iframe");
-  iframe = newIframe;
-  newIframe.id = "ai-iframe";
-  newIframe.style.cssText = "width: 100%; height: 100%; border: none;";
-  newIframe.allow = "camera; clipboard-write; fullscreen; microphone; geolocation";
-  newIframe.src = currentAiConfig.url;
+	const newIframe = document.createElement("iframe");
+	iframe = newIframe;
+	newIframe.id = "ai-iframe";
+	newIframe.style.cssText = "width: 100%; height: 100%; border: none;";
+	newIframe.allow =
+		"camera; clipboard-write; fullscreen; microphone; geolocation";
+	newIframe.src = currentAiConfig.url;
 
-  // Append iframe to container
-  container.appendChild(newIframe);
-  container.style.display = "block";
+	// Append iframe to container
+	container.appendChild(newIframe);
+	container.style.display = "block";
 
-  newIframe.onload = async () => {
-    logger.log(`✅ Successfully loaded ${aiType} in iframe!`);
-  };
+	newIframe.onload = async () => {
+		logger.log(`✅ Successfully loaded ${aiType} in iframe!`);
+	};
 
-  newIframe.onerror = (e) => {
-    logger.error(`❌ Failed to load ${aiType} in iframe:`, e);
+	newIframe.onerror = (e) => {
+		logger.error(`❌ Failed to load ${aiType} in iframe:`, e);
 
-    // Fallback: show a message with link to open in new tab
+		// Fallback: show a message with link to open in new tab
 
-    // Create fallback content without inline scripts
-    const fallbackDiv = document.createElement("div");
-    fallbackDiv.style.cssText =
-      "padding:20px;text-align:center;font-family:Arial;background:#f8f9fa;height:100%;display:flex;align-items:center;justify-content:center;";
-    fallbackDiv.innerHTML = `
+		// Create fallback content without inline scripts
+		const fallbackDiv = document.createElement("div");
+		fallbackDiv.style.cssText =
+			"padding:20px;text-align:center;font-family:Arial;background:#f8f9fa;height:100%;display:flex;align-items:center;justify-content:center;";
+		fallbackDiv.innerHTML = `
       <div style="background:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);max-width:300px;">
         <h3 style="margin:0 0 10px 0;color:#dc3545;">Cannot Embed ${currentAiConfig.url}</h3>
         <p style="margin:0 0 15px 0;color:#666;">Security restrictions prevent embedding this AI service.</p>
@@ -276,27 +288,27 @@ async function loadAIInIframe(aiType: AiType) {
       </div>
     `;
 
-    // Clear iframe and show fallback
-    newIframe.src = "about:blank";
-    newIframe.srcdoc = "";
-    newIframe.style.display = "none";
+		// Clear iframe and show fallback
+		newIframe.src = "about:blank";
+		newIframe.srcdoc = "";
+		newIframe.style.display = "none";
 
-    // Replace container content with fallback
-    const container = document.getElementById("ai-container");
-    if (container) {
-      container.innerHTML = "";
-      container.appendChild(fallbackDiv);
-      container.style.display = "block";
+		// Replace container content with fallback
+		const container = document.getElementById("ai-container");
+		if (container) {
+			container.innerHTML = "";
+			container.appendChild(fallbackDiv);
+			container.style.display = "block";
 
-      // Add event listener to the button
-      setTimeout(() => {
-        const openBtn = document.getElementById("fallback-open-btn");
-        if (openBtn) {
-          openBtn.addEventListener("click", () => {
-            chrome.tabs.create({ url: currentAiConfig.url, active: true });
-          });
-        }
-      }, 100);
-    }
-  };
+			// Add event listener to the button
+			setTimeout(() => {
+				const openBtn = document.getElementById("fallback-open-btn");
+				if (openBtn) {
+					openBtn.addEventListener("click", () => {
+						chrome.tabs.create({ url: currentAiConfig.url, active: true });
+					});
+				}
+			}, 100);
+		}
+	};
 }

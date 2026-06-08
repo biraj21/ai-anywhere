@@ -209,9 +209,9 @@ async function initSettings() {
 }
 
 function initPromoLinks() {
-  const hangingPieceLink = document.getElementById("hanging-piece-popup-link") as HTMLAnchorElement | null;
-  if (hangingPieceLink) {
-    hangingPieceLink.href = PROMO_LINKS.hangingPiecePopup;
+  const promoLink = document.getElementById("promo-link") as HTMLAnchorElement | null;
+  if (promoLink) {
+    promoLink.href = PROMO_LINKS.promoPopup;
   }
 }
 
